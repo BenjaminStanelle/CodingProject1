@@ -1,0 +1,17 @@
+This program manages an on-line store named MavMart, which sells
+generic products such as you would find at Walmart, K-Mart, or Target.
+
+Adding a new product (option 1) requires only the product name and price.
+The name is any string of text, and the price is any number.
+
+Listing all products (option 2) displays all information known about
+the products available at MavMart.
+
+Placing an order(option 4) requires a buyer's email address. The email
+address is any string of text, and is not verified. Then, products may
+be selected by their automatically generated product number with
+associated quantity. Entering special product number -1 completes
+the order.
+
+Listing all orders (option 5) simply lists every order in the system.
+WARNING: This may be a very long list.
