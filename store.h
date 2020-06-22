@@ -4,11 +4,18 @@
 #include "order.h"
 #include "product.h"
 #include <vector>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <fstream>
 
 class Store {
   public:
     Store(std::string name);
+    Store(std::istream& ist);
     std::string name() const;
+    //save
+    void save(std::ofstream& ofs);
 
     // Product Management
     void add_product(Product product);

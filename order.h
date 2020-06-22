@@ -8,11 +8,13 @@
 class Order {
   public:
     Order(std::string email);
+    Order(std::istream& ist);
     std::string email() const;
     double cost();
     void add_product_order(Product_order po);
     int num_product_orders();
     Product_order product_order(int index);
+    void save(std::ofstream& ofs);
     friend std::ostream& operator<<(std::ostream& ost, const Order& order);
   private:
     std::string _email;

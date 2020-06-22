@@ -8,10 +8,12 @@ class Product_order : public Product {
   public:
     Product_order(std::string name, double price, int quantity);
     Product_order(Product product, int quantity);
+    Product_order(std::istream& ist);
     int quantity() const;
     double cost() const;
     bool operator==(const Product_order& po);
     bool operator!=(const Product_order& po);
+    void save(std::ofstream& ofs);
     friend std::ostream& operator<<(std::ostream& ost, const Product_order& po);
   private:
     int _quantity;

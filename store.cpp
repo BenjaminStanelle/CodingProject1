@@ -1,6 +1,30 @@
 #include "store.h"
 
 Store::Store(std::string name) : _name{name} { }
+Store::Store(std::istream& ist) {
+    int products_num;
+    int i = 0;
+    std::getline(ist, _name);
+    ist >> products_num; 
+    ist.ignore();
+    while (i < products_num) {
+        _products.push_back(Product{ ist });
+        i++;
+    }
+
+    int orders_num;
+    ist >> orders_num;
+    ist.ignore();
+
+    i = 0;
+    while (i < orders_num) {
+        _orders.push_back(Order{ist});
+        i++;
+    }
+  
+
+
+}
 std::string Store::name() const {return _name;}
 
 // Product Management
@@ -34,4 +58,18 @@ Order Store::order(int order_num) const {
 std::ostream& operator<<(std::ostream& ost, const Store& store) {
     for (int i=0; i<store.num_products(); ++i) ost << i << ") " << store.product(i) << std::endl;
     return ost;
+}
+
+void Store::save(std::ofstream& ofs) {
+    ofs << _name << "\n";
+    ofs << _products.size()<<"\n";
+    for (auto& p : _products) {
+        p.save(ofs);
+    }
+    ofs << _orders.size();
+    for (auto& o : _orders) {
+        o.save(ofs);
+    }
+
+
 }

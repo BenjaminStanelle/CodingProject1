@@ -17,6 +17,8 @@ class Controller {
     void list_all_orders();
     void easter_egg();
     void help();
+    void load_file();
+    void save_file();
   private:
     double get_double(std::string prompt);
     int get_int(std::string prompt);

@@ -1,6 +1,8 @@
 #include "controller.h"
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <fstream>
 
 Controller::Controller() : Controller(Store{"Mavmart"}) { }
 Controller::Controller(Store store) : _store{store}, _view{View{_store}} { }
@@ -58,6 +60,8 @@ void Controller::execute_cmd(int cmd) {
         case 2: list_all_products(); break;
         case 4: add_order(); break;
         case 5: list_all_orders(); break;
+        case 6: load_file(); break;
+        case 7: save_file(); break;
         case 9: help(); break;
         case 42: easter_egg(); break;
         default: std::cerr << "#### Invalid command" << std::endl;
@@ -126,6 +130,38 @@ void Controller::easter_egg() {
         _store.add_product(Product {"Diet Coke", 1.25});
         _store.add_product(Product {"Dr Pepper", 1.25});
 }
+
+void Controller::load_file() {
+    std::string f_name;
+    std::cout << "Enter the Name of the file: ";
+    std::getline(std::cin, f_name);
+    std::ifstream ifs{f_name};
+    if (ifs) {
+        _store = Store{ ifs };
+
+        std::cout << "\nFile " << f_name << " loaded successfully.";
+    }
+    else  std::cerr << "\nNo such file exists. Try again.";
+
+    }
+
+
+
+void Controller::save_file() {
+    std::string f_name;
+    std::cout << "Enter new file to be saved to: ";
+    std::getline(std::cin, f_name);
+    std::ofstream ofs{ f_name };
+    if (ofs) {
+        _store.save(ofs);
+
+        std::cout << "File saved as " << f_name << std::endl;
+    }
+    else std::cerr << "File failed to save.";
+
+}
+
+
 void Controller::help() {
     std::cout << _view.help() << std::endl;
 }

@@ -10,10 +10,10 @@ std::string View::main_menu() {
                Welcome to C1325 MavMart
                ========================
 
-Products                 Orders                Utility
---------                 ------                -------
-(1) Add product          (4) Place order       (9) Help
-(2) List all products    (5) List all orders   (0) Exit
+Products                 Orders                Load/Store       Utility
+--------                 ------                ----------       -------
+(1) Add product          (4) Place order       (6) Load File    (9) Help
+(2) List all products    (5) List all orders   (7) Save File    (0) Exit
 
 )";
 }
