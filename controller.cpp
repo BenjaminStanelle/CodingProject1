@@ -4,8 +4,9 @@
 #include <string>
 #include <fstream>
 
-Controller::Controller() : Controller(Store{"Mavmart"}) { }
-Controller::Controller(Store store) : _store{store}, _view{View{_store}} { }
+Controller::Controller() : Controller(nullptr) { }
+Controller::Controller(Gtk::Window* window) : Controller(window, Store{ "Mavmart" }) { }
+Controller::Controller(Gtk::Window* window, Store store) : _store{store}, _view{View{_store}} { }
 
 double Controller::get_double(std::string prompt) {
     while(true) {
@@ -54,6 +55,8 @@ void Controller::cli() {
     }
 }
 
+//no longer need because of GUI implementation
+
 void Controller::execute_cmd(int cmd) {
     switch(cmd) {
         case 1: add_product(); break;
@@ -71,19 +74,65 @@ void Controller::execute_cmd(int cmd) {
 void Controller::add_product() {
     try {
         std::string name;
-        std::cout << "Product name? ";
-        std::getline(std::cin, name);
-        if (name.empty()) throw std::runtime_error{"Empty product name"};
-        double price = get_double("Price");
+        double price;
+
+
+        Gtk::Dialog* dialog = new Gtk::Dialog();
+        dialog->set_title("Add Product");
+
+        // Name
+        Gtk::HBox b_name;
+
+        Gtk::Label l_name{"Name"};
+        l_name.set_width_chars(15);
+        b_name.pack_start(l_name, Gtk::PACK_SHRINK);
+
+        Gtk::Entry entry1;
+        entry1.set_max_length(50);
+        b_name.pack_start(entry1, Gtk::PACK_SHRINK);
+        dialog->get_vbox()->pack_start(b_name, Gtk::PACK_SHRINK);
+
+        // Price
+        Gtk::HBox b_price;
+
+        Gtk::Label l_price{"Price"};
+        l_price.set_width_chars(15);
+        b_price.pack_start(l_price, Gtk::PACK_SHRINK);
+
+        Gtk::Entry entry2;
+        entry2.set_max_length(50);
+        b_price.pack_start(entry2, Gtk::PACK_SHRINK);
+        dialog->get_vbox()->pack_start(b_price, Gtk::PACK_SHRINK);
+
+        // Show dialog
+        dialog->add_button("Cancel", 0);
+        dialog->add_button("OK", 1);
+        dialog->show_all();
+        int result = dialog->run();
+
+
+        dialog->close();
+        while (Gtk::Main::events_pending()) Gtk::Main::iteration();
+
+        if (result == 1) {
+            name = entry1.get_text();
+            std::string e_2 = entry2.get_text();
+            price = std::stod(e_2);
+        }
+
+        delete dialog;
+        
+        if (name.empty()) { throw std::runtime_error{ "Empty product name" }; };
         _store.add_product(Product{name, price});
     } catch(std::runtime_error e) {
-        std::cerr << "#### Add Product aborted: " << e.what() << std::endl;
+        Dialogs::message("#### Error: Invalid input: " + std::string{e.what()});
     }
 }
 
 void Controller::list_all_products() {
-    std::cout << "\nAvailable Products\n==================\n";
-    std::cout << _store; //since store has a overloaded operator, and a friend of this class, just used its overloaded operator<<;
+    std::ostringstream stream;
+    stream << _store;
+    Dialogs::message(stream.str(), "Available Products");
 }
 
 void Controller::add_order() {

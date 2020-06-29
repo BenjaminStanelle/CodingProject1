@@ -1,12 +1,15 @@
 #ifndef __CONTROLLER_H
 #define __CONTROLLER_H
 #include "view.h"
+#include "gtkmm.h"
 #include "store.h"
+#include "dialogs.h"
 
 class Controller {
   public:
     Controller();
-    Controller(Store store);
+    Controller(Gtk::Window* window);
+    Controller(Gtk::Window* window, Store store);
     void cli();
     void execute_cmd(int cmd);
 

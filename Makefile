@@ -1,54 +1,43 @@
-# Suggested Makefile for CSE_1325 Homework #6 full_credit
-CXXFLAGS += --std=c++17 
+#compiler options
+CXXFLAGS+=--std=c++17 -lstdc++fs
 
-all: mavmart
+#source files
+SOURCES=$(wildcard *.cpp)
 
-debug: CXXFLAGS += -g
-debug: all
+#object files
+OBJECTS=$(SOURCES:.cpp=.o)
 
-test: CXXFLAGS += -g
-test: test_product test_product_order test_order test_store
+#main link objects
+MOBJECTS=$(filter-out test%,$(OBJECTS))
 
-mavmart: main.o controller.o view.o store.o order.o product.o product_order.o *.h
-	${CXX} ${CXXFLAGS} -o mavmart main.o controller.o view.o store.o order.o product.o product_order.o
-main.o: main.cpp *.h
-	${CXX} ${CXXFLAGS} -c main.cpp
-controller.o: controller.cpp *.h
-	${CXX} ${CXXFLAGS} -c controller.cpp
-view.o: view.cpp *.h
-	${CXX} ${CXXFLAGS} -c view.cpp
-store.o: store.cpp *.h
-	${CXX} ${CXXFLAGS} -c store.cpp
-order.o: order.cpp *.h
-	${CXX} ${CXXFLAGS} -c order.cpp
-product.o: product.cpp *.h
-	${CXX} ${CXXFLAGS} -c product.cpp
-product_order.o: product_order.cpp *.h
-	${CXX} ${CXXFLAGS} -c product_order.cpp
+#test link objects
+TOBJECTS=$(filter-out main.o,$(OBJECTS))
 
-test_product: test_product.o product.o *.h
-	${CXX} ${CXXFLAGS} -o test_product test_product.o product.o
-	-./test_product
-test_product.o: test_product.cpp *.h
-	${CXX} ${CXXFLAGS} -c test_product.cpp
+#included libraries
+INCLUDE=`/usr/bin/pkg-config gtkmm-3.0 --cflags --libs`
 
-test_product_order: test_product_order.o product_order.o product.o *.h
-	${CXX} ${CXXFLAGS} -o test_product_order test_product_order.o product_order.o product.o
-	-./test_product_order
-test_product_order.o: test_product_order.cpp *.h
-	${CXX} ${CXXFLAGS} -c test_product_order.cpp
+#executable filename
+EXECUTABLE=jade
 
-test_order: test_order.o order.o product_order.o product.o *.h
-	${CXX} ${CXXFLAGS} -o test_order test_order.o order.o product_order.o product.o
-	-./test_order
-test_order.o: test_order.cpp *.h
-	${CXX} ${CXXFLAGS} -c test_order.cpp
+all: $(EXECUTABLE)
 
-test_store: test_store.o store.o order.o product_order.o product.o *.h
-	${CXX} ${CXXFLAGS} -o test_store test_store.o store.o order.o product_order.o product.o
-	-./test_store
-test_store.o: test_store.cpp *.h
-	${CXX} ${CXXFLAGS} -c test_store.cpp
+#Special symbols used:
+#$^ - is all the dependencies (in this case =$(OBJECTS) )
+#$@ - is the result name (in this case =$(EXECUTABLE) )
+
+$(EXECUTABLE): $(MOBJECTS)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDE)
+
+test: CXXFLAGS+= -g
+test: $(TOBJECTS)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(INCLUDE)
+
+debug: CXXFLAGS+= -g
+debug: $(EXECUTABLE)
+
+%.o: %.cpp *.h
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@ 
 
 clean:
-	-rm -f *.gch *.o *~ a.out mavmart test_product test_product_order test_order test_store
+	-rm -f $(EXECUTABLE) test $(OBJECTS)
+
