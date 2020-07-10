@@ -20,6 +20,7 @@ protected:
 	void on_list_product_click();
 	void on_add_order_click();
 	void on_list_order_click();
+	void on_easter_egg_click();
 
 private:
 	Controller* controller;

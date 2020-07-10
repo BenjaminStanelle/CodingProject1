@@ -17,6 +17,40 @@ void Dialogs::message(std::string msg, std::string title) {
     delete dialog;
 }
 
+std::string Dialogs::input(std::string prompt, std::string title) {
+    std::string name;
+    Gtk::Dialog* dialog = new Gtk::Dialog();
+    dialog->set_title(title);
+    // Name
+    Gtk::HBox b_name;
+
+    Gtk::Label l_name{prompt};
+    l_name.set_width_chars(15);
+    b_name.pack_start(l_name, Gtk::PACK_SHRINK);
+
+    Gtk::Entry entry1;
+    entry1.set_max_length(50);
+    b_name.pack_start(entry1, Gtk::PACK_SHRINK);
+    dialog->get_vbox()->pack_start(b_name, Gtk::PACK_SHRINK);
+
+
+    dialog->add_button("Cancel", 0);
+    dialog->add_button("OK", 1);
+    dialog->show_all();
+    int result = dialog->run();
+
+
+    dialog->close();
+    while (Gtk::Main::events_pending()) Gtk::Main::iteration();
+
+    if (result == 1) {
+        name = entry1.get_text();
+    }
+
+    delete dialog;
+    return name;
+}
+
 int Dialogs::question(std::string msg, std::string title, std::vector<std::string> buttons) {
     Gtk::Dialog* dialog = new Gtk::Dialog(title, *_window);
 

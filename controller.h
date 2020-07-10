@@ -1,9 +1,8 @@
 #ifndef __CONTROLLER_H
 #define __CONTROLLER_H
 #include "view.h"
-#include "gtkmm.h"
+#include <gtkmm.h>
 #include "store.h"
-#include "dialogs.h"
 
 class Controller {
   public:
@@ -23,8 +22,11 @@ class Controller {
     void load_file();
     void save_file();
   private:
-    double get_double(std::string prompt);
-    int get_int(std::string prompt);
+      double get_double(std::string prompt, std::string title);
+    int get_int(std::string prompt, std::string title);
+    std::string get_string(std::string prompt, std::string title);
+    Gtk::Window* _window;
+    std::string _filename;
     Store _store;
     View _view;
 };

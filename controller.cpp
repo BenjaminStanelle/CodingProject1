@@ -3,17 +3,31 @@
 #include <sstream>
 #include <string>
 #include <fstream>
+#include <dirent.h>
+#include <experimental/filesystem>
+#include "dialogs.h"
 
 Controller::Controller() : Controller(nullptr) { }
 Controller::Controller(Gtk::Window* window) : Controller(window, Store{ "Mavmart" }) { }
-Controller::Controller(Gtk::Window* window, Store store) : _store{store}, _view{View{_store}} { }
+Controller::Controller(Gtk::Window* window, Store store) : _store{ store }, _view{ View{_store} }, _window{ window }, _filename{ "untitled.dat" } { }
 
-double Controller::get_double(std::string prompt) {
+std::string Controller::get_string(std::string prompt, std::string title) {
+    while (true) {
+        try {
+            std::string s = Dialogs::input(prompt, title);
+            return s;
+        }
+        catch (std::runtime_error e) {
+            Dialogs::message("#### Error: Invalid input: " + std::string{e.what()});
+        }
+    }
+    throw std::runtime_error(prompt + "was not entered");
+}
+
+double Controller::get_double(std::string prompt, std::string title) {
     while(true) {
         try {
-            std::cout << prompt << "? ";
-            std::string s;
-            std::getline(std::cin, s);
+            std::string s = Dialogs::input(prompt,title);
             if(s == "") break;
             std::istringstream iss{s};
             double d;
@@ -25,12 +39,10 @@ double Controller::get_double(std::string prompt) {
     }
     throw std::runtime_error{prompt + " was not entered"};
 }
-int Controller::get_int(std::string prompt) {
+int Controller::get_int(std::string prompt, std::string title) {
     while(true) {
         try {
-            std::cout << prompt << "? ";
-            std::string s;
-            std::getline(std::cin, s);
+            std::string s = Dialogs::input(prompt, title);
             if(s == "") break;
             std::istringstream iss{s};
             int d;
@@ -46,7 +58,7 @@ void Controller::cli() {
     while(true) {
         try {
             std::cout << _view.main_menu();
-            int cmd = get_int("Command");
+            int cmd = get_int("Command","title");
             if (cmd == 0) break;
             execute_cmd(cmd);
         } catch (std::runtime_error e) {
@@ -55,7 +67,6 @@ void Controller::cli() {
     }
 }
 
-//no longer need because of GUI implementation
 
 void Controller::execute_cmd(int cmd) {
     switch(cmd) {
@@ -137,37 +148,56 @@ void Controller::list_all_products() {
 
 void Controller::add_order() {
     try {
-        std::string email;
-        std::cout << "Customer email address? ";
-        std::getline(std::cin, email);
-        if (email.empty()) throw std::runtime_error{"Empty email address"};
+        std::string email = get_string("Email Address:", "Place Order");
+        if (email.empty()) throw std::runtime_error{ "Empty email address" };
         int order_num = _store.create_order(email);
 
-        while(true) {
-            std::cout << "\n\nCurrent Products in Order " << order_num << "\n=============================\n" 
-                      << _store.order(order_num) << std::endl << std::endl;
-            list_all_products();
-            int product_num = get_int("Product number to add (-1 when done)");
+        while (true) {
+            std::ostringstream oss;
+            oss << _store;
+            int product_num = get_int(oss.str(), "Product number to add (-1 when done)");
             if (0 <= product_num && product_num < _store.num_products()) {
-                int product_quantity = get_int("Quantity");
+                int product_quantity = get_int("Quantity", "Product Quantity");
                 if (0 <= product_quantity)
-                    _store.add_to_order(order_num, Product_order{_store.product(product_num), product_quantity});
-                else
-                    std::cerr << "#### Invalid quantity: " << product_quantity << std::endl;
-            } else if (product_num == -1) {
+                    _store.add_to_order(order_num, Product_order{ _store.product(product_num), product_quantity });
+                else {
+                    std::ostringstream osp;
+                    osp << "#### Invalid quantity : " << product_quantity;
+                    Dialogs::message(osp.str(), "Error");
+                }
+            }   
+            else if (product_num == -1) {
                 break;
-            } else {
-                std::cerr << "#### No such product number: " << product_num << std::endl;
             }
+            else {
+                std::ostringstream osp;
+                osp << "####No such product number: " << product_num;
+                Dialogs::message(osp.str(), "Error");
+            }
+
+
+
+
         }
+            
     } catch (std::runtime_error e) {
-        std::cerr << "#### Place Order aborted: " << e.what() << std::endl;
+        std::ostringstream ose;
+        ose << "#### Place Order aborted:" << e.what();
+        Dialogs::message(ose.str(), "Error");
     }
 }
+
+
+
 void Controller::list_all_orders() {
-    for(int i=0; i<_store.num_orders(); ++i)
-        std::cout << i << ") " << _store.order(i) << std::endl;
+    std::ostringstream oss;
+    for (int i = 0; i < _store.num_orders(); ++i)
+        oss << i << ") " << _store.order(i) << std::endl;
+        Dialogs::message(oss.str(), "List all Orders");
 }
+
+
+
 void Controller::easter_egg() {
         _store.add_product(Product {"Hamburger", 4.00});
         _store.add_product(Product {"Hot Dog", 2.00});
@@ -197,16 +227,35 @@ void Controller::load_file() {
 
 
 void Controller::save_file() {
-    std::string f_name;
-    std::cout << "Enter new file to be saved to: ";
-    std::getline(std::cin, f_name);
-    std::ofstream ofs{ f_name };
-    if (ofs) {
-        _store.save(ofs);
+    try {
+            Gtk::FileChooserDialog dialog(*_window, "Please choose a file", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SAVE);
+            auto filter_dat = Gtk::FileFilter::create();
+            filter_dat->set_name("DAT files");
+            filter_dat->add_pattern("*.dat");
+            dialog.add_filter(filter_dat);
 
-        std::cout << "File saved as " << f_name << std::endl;
+            auto filter_any = Gtk::FileFilter::create();
+            filter_any->set_name("Any files");
+            filter_any->add_pattern("*");
+            dialog.add_filter(filter_any);
+
+            dialog.set_filename("untitled.dat");
+
+            dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+            dialog.add_button("_Save", Gtk::RESPONSE_OK);
+
+            int result = dialog.run();
+
+            if (result != Gtk::RESPONSE_OK) return;
+            _filename = dialog.get_filename();
+
+        std::ofstream ofs{ _filename };
+        if (ofs) _store.save(ofs);
+        
     }
-    else std::cerr << "File failed to save.";
+    catch (std::exception e) {
+        Dialogs::message("Save aborted", "Save Store");
+    }
 
 }
 

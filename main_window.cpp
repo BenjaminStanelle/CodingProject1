@@ -61,6 +61,11 @@ Main_window::Main_window() {
 	menuitem_list_product->signal_activate().connect(sigc::mem_fun(*this, &Main_window::on_list_product_click));
 	filemenu_products->append(*menuitem_list_product);
 
+	//Easter Egg
+	Gtk::MenuItem* menuitem_easter = Gtk::manage(new Gtk::MenuItem("_Easter Egg", true));
+	menuitem_easter->signal_activate().connect(sigc::mem_fun(*this, &Main_window::on_easter_egg_click));
+	filemenu_products->append(*menuitem_easter);
+
 
 	//Orders - drop down Menu
 	Gtk::MenuItem* menuitem_order = Gtk::manage(new Gtk::MenuItem("Order", true));
@@ -82,6 +87,8 @@ Main_window::Main_window() {
 	
 
 	vbox->show_all();
+
+	controller = new Controller{ this }; // in case add product is clicked without adding new store.
 }
 
 //destructs the class
@@ -102,11 +109,12 @@ void Main_window::on_load_click() {
 }
 
 void Main_window::on_save_click() {
-
+	controller->save_file();
 
 }
 
 void Main_window::on_add_product_click() {
+
 	controller->add_product();
 }
 
@@ -116,10 +124,13 @@ void Main_window::on_list_product_click() {
 
 void Main_window::on_add_order_click() {
 
-
+	controller->add_order();
 }
 
 void Main_window::on_list_order_click() {
+	controller->list_all_orders();
+}
 
-
+void Main_window::on_easter_egg_click() {
+	controller->easter_egg();
 }
